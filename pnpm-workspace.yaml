@@ -1,0 +1,33 @@
+packages:
+  - "frontend"
+  - "backend"
+  - "lib/*"
+
+allowBuilds:
+  '@firebase/util': true
+  core-js: set this to true or false
+  esbuild: set this to true or false
+  protobufjs: true
+
+catalog:
+  "@tanstack/react-query": "^5.80.7"
+  "@types/node": "^22.15.30"
+  "@types/react": "^19.1.6"
+  "@types/react-dom": "^19.1.5"
+  "@vitejs/plugin-react": "^4.5.2"
+  "@tailwindcss/vite": "^4.1.10"
+  "class-variance-authority": "^0.7.1"
+  "clsx": "^2.1.1"
+  "drizzle-orm": "^0.45.0"
+  "framer-motion": "^12.19.1"
+  "lucide-react": "^0.514.0"
+  "react": "^19.1.0"
+  "react-dom": "^19.1.0"
+  "tailwind-merge": "^3.3.1"
+  "tailwindcss": "^4.1.10"
+  "tsx": "^4.19.4"
+  "vite": "^6.3.5"
+  "zod": "^3.25.57"
+  "dotenv": "^16.5.0"
+
+onlyBuiltDependencies: core-js,esbuild

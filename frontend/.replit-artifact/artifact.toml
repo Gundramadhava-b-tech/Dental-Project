@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "OSA Airway Diagnostic System"
+version = "1.0.0"
+id = "artifacts/osa-diagnostic"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 22527
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/osa-diagnostic run dev"
+
+[services.env]
+PORT = "22527"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/osa-diagnostic", "run", "build"]
+publicDir = "artifacts/osa-diagnostic/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

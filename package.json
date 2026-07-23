@@ -1,0 +1,13 @@
+{
+  "name": "osa-diagnostic-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @workspace/osa-diagnostic run dev",
+    "dev:backend": "pnpm --filter @workspace/api-server run dev",
+    "build": "pnpm --filter @workspace/osa-diagnostic run build"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["core-js", "esbuild"]
+  }
+}

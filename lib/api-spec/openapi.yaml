@@ -1,0 +1,375 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: OSA Airway Diagnostic System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: patients
+    description: Patient management
+  - name: scans
+    description: CBCT scan management
+  - name: analyses
+    description: Airway analysis results
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /patients:
+    get:
+      operationId: listPatients
+      tags: [patients]
+      summary: List all patients
+      responses:
+        "200":
+          description: List of patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patient"
+    post:
+      operationId: createPatient
+      tags: [patients]
+      summary: Create a new patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePatientInput"
+      responses:
+        "201":
+          description: Patient created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
+  /patients/{id}:
+    get:
+      operationId: getPatient
+      tags: [patients]
+      summary: Get patient by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Patient data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "404":
+          description: Patient not found
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List all scans
+      parameters:
+        - name: patientId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scan"
+    post:
+      operationId: createScan
+      tags: [scans]
+      summary: Upload a new CBCT scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScanInput"
+      responses:
+        "201":
+          description: Scan created and analyzed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+
+  /scans/{id}:
+    get:
+      operationId: getScan
+      tags: [scans]
+      summary: Get scan by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scan data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        "404":
+          description: Scan not found
+
+  /analyses:
+    get:
+      operationId: listAnalyses
+      tags: [analyses]
+      summary: List all analyses with optional filters
+      parameters:
+        - name: patientId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: severity
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [Normal, Mild, Moderate, Severe]
+      responses:
+        "200":
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Analysis"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [analyses]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Patient:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        email:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        scanCount:
+          type: integer
+        latestSeverity:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
+        - age
+        - gender
+        - createdAt
+        - scanCount
+
+    CreatePatientInput:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        email:
+          type: string
+        phone:
+          type: string
+      required:
+        - name
+        - age
+        - gender
+
+    Scan:
+      type: object
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        patientName:
+          type: string
+        filename:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        analysis:
+          $ref: "#/components/schemas/Analysis"
+          nullable: true
+      required:
+        - id
+        - patientId
+        - patientName
+        - filename
+        - uploadedAt
+        - status
+
+    CreateScanInput:
+      type: object
+      properties:
+        patientId:
+          type: integer
+        filename:
+          type: string
+        fileData:
+          type: string
+          description: Base64 encoded image data
+      required:
+        - patientId
+        - filename
+
+    Analysis:
+      type: object
+      properties:
+        id:
+          type: integer
+        scanId:
+          type: integer
+        patientId:
+          type: integer
+        patientName:
+          type: string
+        severity:
+          type: string
+          enum: [Normal, Mild, Moderate, Severe]
+        airwayArea:
+          type: number
+          description: Airway cross-sectional area in mm²
+        airwayVolume:
+          type: number
+          description: Estimated airway volume in mm³
+        minConstriction:
+          type: number
+          description: Minimum constriction percentage
+        recommendation:
+          type: string
+        analyzedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - scanId
+        - patientId
+        - patientName
+        - severity
+        - airwayArea
+        - airwayVolume
+        - minConstriction
+        - recommendation
+        - analyzedAt
+
+    DashboardStats:
+      type: object
+      properties:
+        totalPatients:
+          type: integer
+        totalScans:
+          type: integer
+        severityDistribution:
+          type: object
+          properties:
+            Normal:
+              type: integer
+            Mild:
+              type: integer
+            Moderate:
+              type: integer
+            Severe:
+              type: integer
+          required:
+            - Normal
+            - Mild
+            - Moderate
+            - Severe
+        recentAnalyses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Analysis"
+        avgAirwayArea:
+          type: number
+        monthlyScans:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              count:
+                type: integer
+            required:
+              - month
+              - count
+      required:
+        - totalPatients
+        - totalScans
+        - severityDistribution
+        - recentAnalyses
+        - avgAirwayArea
+        - monthlyScans
