@@ -7,8 +7,5 @@
     "dev:backend": "pnpm --filter @workspace/api-server run dev",
     "build": "pnpm --filter @workspace/osa-diagnostic run build"
   },
-  "packageManager": "pnpm@9.15.0",
-  "pnpm": {
-    "onlyBuiltDependencies": ["core-js", "esbuild"]
-  }
+  "packageManager": "pnpm@10.0.0"
 }
