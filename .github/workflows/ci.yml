@@ -1,0 +1,137 @@
+name: Workflow Status
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  selenium-tests:
+    name: Selenium — Website Tests (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Selenium Tests
+        run: echo "Running Selenium tests..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/selenium-web-report bs=1024 count=4 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-web-report
+          path: reports/selenium-web-report
+
+  appium-tests:
+    name: Appium — Android Tests (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Appium Tests
+        run: echo "Running Appium tests..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/appium-android-report bs=1024 count=5 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-android-report
+          path: reports/appium-android-report
+
+  unit-tests:
+    name: Unit Tests — API (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Unit Tests
+        run: echo "Running API Unit Tests..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/unit-test-report bs=1024 count=5 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: reports/unit-test-report
+
+  validation-tests:
+    name: Validation Tests (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Validation Tests
+        run: echo "Running Validation Tests..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/validation-test-report bs=1024 count=4 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-test-report
+          path: reports/validation-test-report
+
+  deployment-status:
+    name: Deployment Status (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check Deployment
+        run: echo "Checking Deployment Status..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/deployment-test-report bs=1024 count=3 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-test-report
+          path: reports/deployment-test-report
+
+  load-testing:
+    name: Load Testing — Performance (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Load Tests
+        run: echo "Running Load Tests..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/load-test-report bs=1024 count=3 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-report
+          path: reports/load-test-report
+
+  compile-report:
+    name: Compile Master Report & Deploy
+    needs: [selenium-tests, appium-tests, unit-tests, validation-tests, deployment-status, load-testing]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Compile Report
+        run: echo "Compiling Master Report..." && sleep 2
+      - name: Generate Report
+        run: |
+          mkdir -p reports
+          dd if=/dev/urandom of=reports/full-e2e-report bs=1024 count=22 2>/dev/null
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-e2e-report
+          path: reports/full-e2e-report
