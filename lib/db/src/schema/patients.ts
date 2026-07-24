@@ -10,6 +10,7 @@ export const patientsTable = pgTable("patients", {
   email: text("email"),
   phone: text("phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  physicianId: text("physician_id"),
 });
 
 export const insertPatientSchema = createInsertSchema(patientsTable).omit({ id: true, createdAt: true });

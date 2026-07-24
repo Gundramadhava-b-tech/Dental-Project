@@ -1,0 +1,21 @@
+{
+  "name": "osa-appium-test",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Appium E2E Functionality Test Suite for OSA Diagnostic Android Mobile App",
+  "scripts": {
+    "test:appium": "wdio run wdio.conf.js",
+    "report": "node generate-appium-excel.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "webdriverio": "^8.32.0",
+    "@appium/relaxed-caps-plugin": "^1.0.0"
+  },
+  "devDependencies": {
+    "@wdio/cli": "^8.32.0",
+    "@wdio/local-runner": "^8.32.0",
+    "@wdio/mocha-framework": "^8.32.0",
+    "@wdio/spec-reporter": "^8.32.0"
+  }
+}

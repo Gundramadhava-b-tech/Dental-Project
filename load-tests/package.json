@@ -1,0 +1,15 @@
+{
+  "name": "osa-load-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Baseline load tests for OSA Diagnostic API",
+  "scripts": {
+    "load-test": "k6 run --out json=load-tests/results.json load-tests/baseline.js",
+    "load-test:remote": "k6 run --out json=load-tests/results.json --env BASE_URL=%BASE_URL% load-tests/baseline.js",
+    "report": "node load-tests/generate-excel.js",
+    "test:full": "npm run load-test && npm run report"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

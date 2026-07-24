@@ -1,0 +1,14 @@
+{
+  "name": "osa-selenium-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Selenium E2E Automated Web Testing for OSA Diagnostic Frontend",
+  "scripts": {
+    "test:selenium": "node tests/login.test.js",
+    "report": "node generate-selenium-excel.js"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.20.0",
+    "chromedriver": "^124.0.0"
+  }
+}

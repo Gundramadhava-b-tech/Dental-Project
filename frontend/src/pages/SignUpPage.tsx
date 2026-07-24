@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { AeroDiagLogo } from "@/components/AeroDiagLogo";
-import { Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, AlertCircle, UserPlus, LogIn } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -10,31 +10,48 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 
-type Step = "captcha" | "form";
+type Step = "choice" | "form";
 
 export default function SignUpPage() {
   const [, navigate] = useLocation();
-  const [step, setStep] = useState<Step>("captcha");
-  const [captchaChecked, setCaptchaChecked] = useState(false);
+  const [step, setStep] = useState<Step>("choice");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleCaptchaContinue() {
-    if (!captchaChecked) return;
-    setStep("form");
-  }
+  // Real-time Validation Rules
+  const hasStartedTypingName = name.length > 0;
+  const isNameValid = name.trim().length >= 3;
+
+  const hasStartedTypingEmail = email.length > 0;
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const hasStartedTypingPassword = password.length > 0;
+  const isPasswordValid = password.length >= 6;
+
+  const hasStartedTypingConfirmPassword = confirmPassword.length > 0;
+  const isConfirmPasswordValid = confirmPassword.length > 0 && confirmPassword === password;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password || !name || !confirmPassword) return;
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const { updateProfile } = await import("firebase/auth");
+      await updateProfile(userCredential.user, { displayName: name });
       await sendEmailVerification(userCredential.user);
       navigate("/sign-up/verify-email");
     } catch (err: any) {
@@ -86,73 +103,65 @@ export default function SignUpPage() {
       </div>
 
       <AnimatePresence mode="wait">
-        {step === "captcha" ? (
+        {step === "choice" ? (
+          /* ── Step 1: New User vs Existing User ── */
           <motion.div
-            key="captcha"
+            key="choice"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.35 }}
-            className="relative z-10 w-full max-w-sm"
+            className="relative z-10 w-full max-w-lg"
           >
-            <div className="bg-white/85 backdrop-blur border border-white/80 rounded-2xl shadow-xl px-8 py-10">
+            <div className="bg-white/90 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl px-10 py-12">
               {/* Logo */}
-              <div className="flex flex-col items-center mb-7">
-                <AeroDiagLogo size={40} />
-                <h2 className="font-display font-bold text-xl mt-3 text-foreground">Create your account</h2>
-                <p className="text-muted-foreground text-sm mt-1">Start diagnosing with AeroDiag today.</p>
+              <div className="flex flex-col items-center mb-8">
+                <AeroDiagLogo size={44} />
+                <h2 className="font-display font-bold text-2xl mt-4 text-foreground">Welcome to AeroDiag</h2>
+                <p className="text-muted-foreground text-sm mt-1.5 text-center">
+                  Are you new here, or do you already have an account?
+                </p>
               </div>
 
-              {/* Cloudflare-style CAPTCHA */}
-              <div className="border border-border/60 rounded-xl px-4 py-3.5 flex items-center justify-between bg-white/60 mb-6 shadow-sm">
+              {/* Choice cards */}
+              <div className="space-y-4">
+                {/* New User */}
                 <button
-                  id="captcha-checkbox"
+                  id="choice-new-user-btn"
                   type="button"
-                  className="flex items-center gap-3 group"
-                  onClick={() => setCaptchaChecked(!captchaChecked)}
+                  onClick={() => setStep("form")}
+                  className="w-full group flex items-center gap-4 px-5 py-4 rounded-2xl border-2 border-border/50 bg-white hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 hover:shadow-md text-left"
                 >
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                    captchaChecked
-                      ? "bg-primary border-primary"
-                      : "border-muted-foreground/40 hover:border-primary"
-                  }`}>
-                    {captchaChecked && (
-                      <svg viewBox="0 0 12 12" className="w-3 h-3 text-white" fill="none">
-                        <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                    style={{ background: "hsl(175 100% 32% / 0.10)" }}>
+                    <UserPlus className="w-5 h-5" style={{ color: "hsl(175, 100%, 32%)" }} />
                   </div>
-                  <span className="text-sm font-medium text-foreground select-none">Verify you are human</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground text-sm">I'm a New User</p>
+                    <p className="text-muted-foreground text-xs mt-0.5">Create a new account to get started</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </button>
-                {/* Cloudflare badge */}
-                <div className="flex flex-col items-center gap-0.5 opacity-60">
-                  <svg viewBox="0 0 24 15" width="44" height="27" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18.2 5.9c.1-.5.2-1 .2-1.5C18.4 2 16.5.2 14.2.2c-1.5 0-2.8.7-3.6 1.9-.4-.2-.9-.4-1.4-.4-1.7 0-3 1.3-3 3 0 .2 0 .4.1.6C4.9 5.8 4 7 4 8.4c0 1.7 1.4 3.1 3.1 3.1h10.7c1.5 0 2.7-1.2 2.7-2.7.1-1.2-.7-2.3-2.3-2.9z" fill="#F48120"/>
-                  </svg>
-                  <span className="text-[8px] font-bold text-gray-400 tracking-wide leading-none">CLOUDFLARE</span>
-                  <span className="text-[7px] text-gray-400 leading-none">Privacy • Terms</span>
-                </div>
+
+                {/* Old / Existing User */}
+                <button
+                  id="choice-existing-user-btn"
+                  type="button"
+                  onClick={() => navigate("/sign-in")}
+                  className="w-full group flex items-center gap-4 px-5 py-4 rounded-2xl border-2 border-border/50 bg-white hover:border-indigo-400/60 hover:bg-indigo-50/40 transition-all duration-200 hover:shadow-md text-left"
+                >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-indigo-50">
+                    <LogIn className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground text-sm">I Already Have an Account</p>
+                    <p className="text-muted-foreground text-xs mt-0.5">Sign in with your existing credentials</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
+                </button>
               </div>
 
-              <button
-                id="captcha-continue-btn"
-                type="button"
-                onClick={handleCaptchaContinue}
-                disabled={!captchaChecked}
-                className="w-full py-3 rounded-xl font-semibold text-white text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:-translate-y-0.5"
-                style={{ background: "hsl(175, 100%, 32%)" }}
-              >
-                Continue
-              </button>
-
-              <p className="text-center text-sm text-muted-foreground mt-5">
-                Already have an account?{" "}
-                <Link href="/sign-in">
-                  <span className="text-primary font-semibold hover:underline cursor-pointer">Sign in</span>
-                </Link>
-              </p>
-
-              <p className="text-center mt-4">
+              <p className="text-center mt-6">
                 <Link href="/">
                   <span className="text-xs text-amber-500 hover:underline cursor-pointer font-medium">Development mode</span>
                 </Link>
@@ -160,16 +169,17 @@ export default function SignUpPage() {
             </div>
           </motion.div>
         ) : (
+          /* ── Step 2: Sign-Up Form (New Users Only) ── */
           <motion.div
             key="form"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.35 }}
-            className="relative z-10 w-full max-w-sm"
+            className="relative z-10 w-full max-w-lg"
           >
-            <div className="bg-white/85 backdrop-blur border border-white/80 rounded-2xl shadow-xl px-8 py-10">
-              {/* Logo */}
+            <div className="bg-white/90 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl px-10 py-12">
+              {/* Back + Logo */}
               <div className="flex flex-col items-center mb-7">
                 <AeroDiagLogo size={40} />
                 <h2 className="font-display font-bold text-xl mt-3 text-foreground">Create your account</h2>
@@ -213,64 +223,227 @@ export default function SignUpPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Live Typing Guidance Card */}
+                <AnimatePresence>
+                  {focusedField && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -10, height: 0 }}
+                      className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-xs text-teal-900 flex items-start gap-2.5 shadow-sm"
+                    >
+                      <div className="p-1.5 rounded-lg bg-teal-500/20 text-teal-700 shrink-0 mt-0.5">
+                        <AlertCircle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-bold uppercase tracking-wider text-[10px] text-teal-700 block">Form Guidance</span>
+                        {focusedField === "name" && "Enter a username or full name with at least 3 characters."}
+                        {focusedField === "email" && "Enter a valid email address where we can reach you."}
+                        {focusedField === "password" && "Enter a password with at least 6 characters."}
+                        {focusedField === "confirmPassword" && "Re-type your exact password to confirm."}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Username */}
                 <div>
-                  <label htmlFor="signup-email" className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
+                  <label htmlFor="signup-name" className="block text-sm font-medium text-foreground mb-2">User Name <span className="text-rose-500">*</span></label>
+                  <input
+                    id="signup-name"
+                    type="text"
+                    value={name}
+                    onFocus={() => setFocusedField("name")}
+                    onBlur={() => setFocusedField(null)}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your user name"
+                    className={`w-full h-12 px-4 rounded-xl text-base bg-secondary/40 border text-foreground placeholder:text-muted-foreground focus:outline-none transition-all shadow-sm ${
+                      hasStartedTypingName && !isNameValid ? "border-rose-500 focus:border-rose-500 focus:bg-rose-50/10"
+                      : hasStartedTypingName && isNameValid ? "border-emerald-500 focus:border-emerald-500 focus:bg-emerald-50/10"
+                      : "border-border/60 focus:border-primary/70 focus:bg-white"
+                    }`}
+                    required
+                  />
+                  <AnimatePresence>
+                    {hasStartedTypingName && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className={`text-xs mt-1.5 flex items-center gap-1 ${isNameValid ? 'text-emerald-600' : 'text-rose-500'}`}
+                      >
+                        {isNameValid ? (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Looks good!</>
+                        ) : (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Username must be at least 3 characters</>
+                        )}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Email Address */}
+                <div>
+                  <label htmlFor="signup-email" className="block text-sm font-medium text-foreground mb-2">Email address <span className="text-rose-500">*</span></label>
                   <input
                     id="signup-email"
                     type="email"
                     value={email}
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField(null)}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
-                    className="w-full h-10 px-3.5 rounded-xl text-sm bg-secondary/40 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/70 focus:bg-white transition-all"
+                    placeholder="name@example.com"
+                    className={`w-full h-12 px-4 rounded-xl text-base bg-secondary/40 border text-foreground placeholder:text-muted-foreground focus:outline-none transition-all shadow-sm ${
+                      hasStartedTypingEmail && !isEmailValid ? "border-rose-500 focus:border-rose-500 focus:bg-rose-50/10"
+                      : hasStartedTypingEmail && isEmailValid ? "border-emerald-500 focus:border-emerald-500 focus:bg-emerald-50/10"
+                      : "border-border/60 focus:border-primary/70 focus:bg-white"
+                    }`}
                     required
                   />
+                  <AnimatePresence>
+                    {hasStartedTypingEmail && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className={`text-xs mt-1.5 flex items-center gap-1 ${isEmailValid ? 'text-emerald-600' : 'text-rose-500'}`}
+                      >
+                        {isEmailValid ? (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Valid email format</>
+                        ) : (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Please enter a valid email (e.g. user@domain.com)</>
+                        )}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
+
+                {/* Password */}
                 <div>
-                  <label htmlFor="signup-password" className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+                  <label htmlFor="signup-password" className="block text-sm font-medium text-foreground mb-2">Password <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <input
                       id="signup-password"
                       type={showPassword ? "text" : "password"}
                       value={password}
+                      onFocus={() => setFocusedField("password")}
+                      onBlur={() => setFocusedField(null)}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a password (min. 6 characters)"
-                      className="w-full h-10 px-3.5 pr-10 rounded-xl text-sm bg-secondary/40 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/70 focus:bg-white transition-all"
+                      placeholder="Enter password (min 6 chars)"
+                      className={`w-full h-12 px-4 pr-11 rounded-xl text-base bg-secondary/40 border text-foreground placeholder:text-muted-foreground focus:outline-none transition-all shadow-sm ${
+                        hasStartedTypingPassword && !isPasswordValid ? "border-rose-500 focus:border-rose-500 focus:bg-rose-50/10"
+                        : hasStartedTypingPassword && isPasswordValid ? "border-emerald-500 focus:border-emerald-500 focus:bg-emerald-50/10"
+                        : "border-border/60 focus:border-primary/70 focus:bg-white"
+                      }`}
                       required
                     />
                     <button
                       type="button"
                       id="toggle-password-btn"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+                  <AnimatePresence>
+                    {hasStartedTypingPassword && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className={`text-xs mt-1.5 flex items-center gap-1 ${isPasswordValid ? 'text-emerald-600' : 'text-rose-500'}`}
+                      >
+                        {isPasswordValid ? (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Password length requirement met</>
+                        ) : (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Must be at least 6 characters long</>
+                        )}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Verify Password */}
+                <div>
+                  <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-foreground mb-2">Verify Password <span className="text-rose-500">*</span></label>
+                  <div className="relative">
+                    <input
+                      id="signup-confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onFocus={() => setFocusedField("confirmPassword")}
+                      onBlur={() => setFocusedField(null)}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className={`w-full h-12 px-4 pr-11 rounded-xl text-base bg-secondary/40 border text-foreground placeholder:text-muted-foreground focus:outline-none transition-all shadow-sm ${
+                        hasStartedTypingConfirmPassword && !isConfirmPasswordValid ? "border-rose-500 focus:border-rose-500 focus:bg-rose-50/10"
+                        : hasStartedTypingConfirmPassword && isConfirmPasswordValid ? "border-emerald-500 focus:border-emerald-500 focus:bg-emerald-50/10"
+                        : "border-border/60 focus:border-primary/70 focus:bg-white"
+                      }`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      id="toggle-confirm-password-btn"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  <AnimatePresence>
+                    {hasStartedTypingConfirmPassword && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className={`text-xs mt-1.5 flex items-center gap-1 ${isConfirmPasswordValid ? 'text-emerald-600' : 'text-rose-500'}`}
+                      >
+                        {isConfirmPasswordValid ? (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Passwords match!</>
+                        ) : (
+                          <><AlertCircle className="w-3.5 h-3.5" /> Passwords do not match</>
+                        )}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <button
                   id="signup-continue-btn"
                   type="submit"
-                  disabled={loading || googleLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white text-sm transition-all disabled:opacity-60 hover:shadow-lg hover:-translate-y-0.5"
+                  disabled={loading || googleLoading || !isNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid}
+                  className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-semibold text-white text-base transition-all disabled:opacity-50 hover:shadow-lg hover:-translate-y-0.5 mt-5"
                   style={{ background: "hsl(175, 100%, 32%)" }}
                 >
                   {loading ? (
                     <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   ) : (
-                    <>Continue <ArrowRight className="w-4 h-4" /></>
+                    <>Create Account <ArrowRight className="w-4 h-4" /></>
                   )}
                 </button>
               </form>
 
+              {/* Back link */}
               <p className="text-center text-sm text-muted-foreground mt-5">
                 Already have an account?{" "}
-                <Link href="/sign-in">
-                  <span className="text-primary font-semibold hover:underline cursor-pointer">Sign in</span>
-                </Link>
+                <button
+                  type="button"
+                  onClick={() => navigate("/sign-in")}
+                  className="text-primary font-semibold hover:underline cursor-pointer bg-transparent border-none p-0"
+                >
+                  Sign in
+                </button>
               </p>
 
-              <p className="text-center mt-4">
+              <p className="text-center mt-3">
+                <button
+                  type="button"
+                  onClick={() => setStep("choice")}
+                  className="text-xs text-muted-foreground hover:underline cursor-pointer bg-transparent border-none p-0"
+                >
+                  ← Go back
+                </button>
+              </p>
+
+              <p className="text-center mt-3">
                 <Link href="/">
                   <span className="text-xs text-amber-500 hover:underline cursor-pointer font-medium">Development mode</span>
                 </Link>

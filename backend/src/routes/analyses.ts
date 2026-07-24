@@ -1,18 +1,39 @@
 import { Router, type IRouter } from "express";
 import { db, patientsTable, scansTable, analysesTable } from "@workspace/db";
 import { ListAnalysesQueryParams } from "@workspace/api-zod";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, inArray } from "drizzle-orm";
 
 const router: IRouter = Router();
 
 router.get("/analyses", async (req, res) => {
   try {
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
+
+    const physicianPatients = await db
+      .select({ id: patientsTable.id })
+      .from(patientsTable)
+      .where(eq(patientsTable.physicianId, physicianId));
+    
+    if (physicianPatients.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const allowedPatientIds = physicianPatients.map(p => p.id);
+
     const query = ListAnalysesQueryParams.parse(req.query);
 
-    let analyses = await db
+    let analysesRaw = await db
       .select()
       .from(analysesTable)
+      .where(inArray(analysesTable.patientId, allowedPatientIds))
       .orderBy(desc(analysesTable.analyzedAt));
+    
+    let analyses = analysesRaw;
 
     if (query.patientId) {
       analyses = analyses.filter((a) => a.patientId === query.patientId);
@@ -45,10 +66,39 @@ router.get("/analyses", async (req, res) => {
   }
 });
 
-router.get("/stats", async (_req, res) => {
+router.get("/stats", async (req, res) => {
   try {
-    const totalPatients = await db.select({ count: sql<number>`count(*)::int` }).from(patientsTable);
-    const totalScans = await db.select({ count: sql<number>`count(*)::int` }).from(scansTable);
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
+
+    const physicianPatients = await db
+      .select({ id: patientsTable.id })
+      .from(patientsTable)
+      .where(eq(patientsTable.physicianId, physicianId));
+    
+    if (physicianPatients.length === 0) {
+      res.json({
+        totalPatients: 0,
+        totalScans: 0,
+        severityDistribution: { Normal: 0, Mild: 0, Moderate: 0, Severe: 0 },
+        recentAnalyses: [],
+        avgAirwayArea: 0,
+        monthlyScans: [],
+      });
+      return;
+    }
+
+    const allowedPatientIds = physicianPatients.map(p => p.id);
+
+    const totalPatients = physicianPatients.length;
+    
+    const totalScansResult = await db.select({ count: sql<number>`count(*)::int` })
+      .from(scansTable)
+      .where(inArray(scansTable.patientId, allowedPatientIds));
+    const totalScansCount = totalScansResult[0]?.count ?? 0;
 
     const severityCounts = await db
       .select({
@@ -56,6 +106,7 @@ router.get("/stats", async (_req, res) => {
         count: sql<number>`count(*)::int`,
       })
       .from(analysesTable)
+      .where(inArray(analysesTable.patientId, allowedPatientIds))
       .groupBy(analysesTable.severity);
 
     const severityDistribution = { Normal: 0, Mild: 0, Moderate: 0, Severe: 0 };
@@ -67,11 +118,13 @@ router.get("/stats", async (_req, res) => {
 
     const avgAreaResult = await db
       .select({ avg: sql<number>`avg(airway_area)::real` })
-      .from(analysesTable);
+      .from(analysesTable)
+      .where(inArray(analysesTable.patientId, allowedPatientIds));
 
     const recentAnalysesRaw = await db
       .select()
       .from(analysesTable)
+      .where(inArray(analysesTable.patientId, allowedPatientIds))
       .orderBy(desc(analysesTable.analyzedAt))
       .limit(5);
 
@@ -97,12 +150,13 @@ router.get("/stats", async (_req, res) => {
         count: sql<number>`count(*)::int`,
       })
       .from(scansTable)
+      .where(inArray(scansTable.patientId, allowedPatientIds))
       .groupBy(sql`to_char(uploaded_at, 'Mon YYYY')`)
       .orderBy(sql`min(uploaded_at)`);
 
     res.json({
-      totalPatients: totalPatients[0]?.count ?? 0,
-      totalScans: totalScans[0]?.count ?? 0,
+      totalPatients: totalPatients,
+      totalScans: totalScansCount,
       severityDistribution,
       recentAnalyses,
       avgAirwayArea: Math.round((avgAreaResult[0]?.avg ?? 0) * 10) / 10,

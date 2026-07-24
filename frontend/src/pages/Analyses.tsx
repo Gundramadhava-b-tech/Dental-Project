@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useListAnalyses } from "@workspace/api-client-react";
+import type { ListAnalysesSeverity } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Activity, FileText, Download } from "lucide-react";
-import type { ListAnalysesSeverity } from "@workspace/api-client-react/generated/api.schemas";
 import { generateReport } from "@/lib/generateReport";
 
 export default function Analyses() {

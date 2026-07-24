@@ -5,9 +5,14 @@ import { eq, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-router.get("/patients", async (_req, res) => {
+router.get("/patients", async (req, res) => {
   try {
-    const patients = await db.select().from(patientsTable).orderBy(patientsTable.createdAt);
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
+    const patients = await db.select().from(patientsTable).where(eq(patientsTable.physicianId, physicianId)).orderBy(patientsTable.createdAt);
 
     const scansCount = await db
       .select({
@@ -54,8 +59,13 @@ router.get("/patients", async (_req, res) => {
 
 router.post("/patients", async (req, res) => {
   try {
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
     const body = CreatePatientBody.parse(req.body);
-    const [patient] = await db.insert(patientsTable).values(body).returning();
+    const [patient] = await db.insert(patientsTable).values({ ...body, physicianId }).returning();
     res.status(201).json({
       ...patient,
       createdAt: patient.createdAt.toISOString(),
@@ -70,8 +80,13 @@ router.post("/patients", async (req, res) => {
 
 router.get("/patients/:id", async (req, res) => {
   try {
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
     const { id } = GetPatientParams.parse({ id: Number(req.params.id) });
-    const [patient] = await db.select().from(patientsTable).where(eq(patientsTable.id, id));
+    const [patient] = await db.select().from(patientsTable).where(sql`${patientsTable.id} = ${id} AND ${patientsTable.physicianId} = ${physicianId}`);
     if (!patient) {
       res.status(404).json({ error: "Patient not found" });
       return;

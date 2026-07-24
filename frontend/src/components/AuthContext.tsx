@@ -5,6 +5,7 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { queryClient } from "@/App";
 
 export interface CustomUser {
   uid: string;
@@ -44,7 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(user);
       if (user) {
         localStorage.removeItem("aerodiag_local_user");
+        localStorage.setItem("aerodiag_user_uid", user.uid);
         setLocalUserState(null);
+      } else {
+        localStorage.removeItem("aerodiag_user_uid");
       }
       setLoading(false);
     });
@@ -55,13 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLocalUserState(u);
     if (u) {
       localStorage.setItem("aerodiag_local_user", JSON.stringify(u));
+      localStorage.setItem("aerodiag_user_uid", u.uid);
     } else {
       localStorage.removeItem("aerodiag_local_user");
+      localStorage.removeItem("aerodiag_user_uid");
     }
   };
 
   const signOut = async () => {
     setLocalUser(null);
+    queryClient.clear();
     try {
       await firebaseSignOut(auth);
     } catch (e) {

@@ -285,6 +285,13 @@ export async function customFetch<T = unknown>(
 
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
 
+  if (typeof localStorage !== "undefined") {
+    const uid = localStorage.getItem("aerodiag_user_uid");
+    if (uid) {
+      headers.set("x-physician-id", uid);
+    }
+  }
+
   if (
     typeof init.body === "string" &&
     !headers.has("content-type") &&

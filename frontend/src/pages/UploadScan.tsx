@@ -9,7 +9,7 @@ import { UploadCloud, File, X, BrainCircuit, Activity, AlertTriangle, Download }
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { SeverityBadge } from "@/components/SeverityBadge";
-import type { Analysis } from "@workspace/api-client-react/generated/api.schemas";
+import type { Analysis } from "@workspace/api-client-react";
 import { generateReport } from "@/lib/generateReport";
 
 export default function UploadScan() {

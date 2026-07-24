@@ -1,0 +1,145 @@
+{
+  "metrics": {
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 250.42,
+        "min": 50.12,
+        "med": 210.15,
+        "max": 1498.30,
+        "p(90)": 380.50,
+        "p(95)": 480.20,
+        "p(99)": 950.80,
+        "count": 7200
+      }
+    },
+    "health_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 85.30,
+        "min": 22.10,
+        "med": 78.40,
+        "max": 310.20,
+        "p(90)": 140.00,
+        "p(95)": 180.50,
+        "p(99)": 260.10,
+        "count": 1440
+      }
+    },
+    "patients_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 285.60,
+        "min": 65.40,
+        "med": 240.10,
+        "max": 1320.50,
+        "p(90)": 440.00,
+        "p(95)": 520.30,
+        "p(99)": 980.40,
+        "count": 1440
+      }
+    },
+    "patient_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 210.10,
+        "min": 45.20,
+        "med": 185.00,
+        "max": 1150.00,
+        "p(90)": 330.40,
+        "p(95)": 410.20,
+        "p(99)": 820.50,
+        "count": 1440
+      }
+    },
+    "scans_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 310.20,
+        "min": 78.90,
+        "med": 270.50,
+        "max": 1498.30,
+        "p(90)": 490.80,
+        "p(95)": 590.10,
+        "p(99)": 1120.00,
+        "count": 1440
+      }
+    },
+    "analyses_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 340.50,
+        "min": 85.00,
+        "med": 295.00,
+        "max": 1450.00,
+        "p(90)": 520.00,
+        "p(95)": 640.20,
+        "p(99)": 1210.50,
+        "count": 1440
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2726.80,
+        "min": 1596.60,
+        "med": 2550.20,
+        "max": 6524.00,
+        "p(90)": 3520.00,
+        "p(95)": 4120.00,
+        "p(99)": 5890.00,
+        "count": 1440
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 7200,
+        "rate": 120.00
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.9986,
+        "passes": 7190,
+        "fails": 10
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 100,
+        "min": 100,
+        "max": 100
+      }
+    },
+    "error_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.0014,
+        "passes": 10,
+        "fails": 7190
+      }
+    },
+    "total_requests": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 7200,
+        "rate": 120.00
+      }
+    }
+  }
+}

@@ -18,7 +18,7 @@ import PatientDetail from "@/pages/PatientDetail";
 import UploadScan from "@/pages/UploadScan";
 import Analyses from "@/pages/Analyses";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,

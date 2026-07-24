@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, patientsTable, scansTable, analysesTable } from "@workspace/db";
 import { CreateScanBody, GetScanParams, ListScansQueryParams } from "@workspace/api-zod";
-import { eq } from "drizzle-orm";
+import { eq, sql, inArray } from "drizzle-orm";
 import { analyzeAirway } from "../lib/analyzer.js";
 
 const router: IRouter = Router();
@@ -41,8 +41,26 @@ async function buildScanResponse(scan: typeof scansTable.$inferSelect, patientNa
 
 router.get("/scans", async (req, res) => {
   try {
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
+
+    const physicianPatients = await db
+      .select({ id: patientsTable.id })
+      .from(patientsTable)
+      .where(eq(patientsTable.physicianId, physicianId));
+      
+    if (physicianPatients.length === 0) {
+      res.json([]);
+      return;
+    }
+    const allowedPatientIds = physicianPatients.map(p => p.id);
+
     const query = ListScansQueryParams.parse(req.query);
-    let scans = await db.select().from(scansTable).orderBy(scansTable.uploadedAt);
+    let scansRaw = await db.select().from(scansTable).where(inArray(scansTable.patientId, allowedPatientIds)).orderBy(scansTable.uploadedAt);
+    let scans = scansRaw;
     if (query.patientId) {
       scans = scans.filter((s) => s.patientId === query.patientId);
     }
@@ -66,9 +84,14 @@ router.get("/scans", async (req, res) => {
 
 router.post("/scans", async (req, res) => {
   try {
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
     const body = CreateScanBody.parse(req.body);
 
-    const [patient] = await db.select().from(patientsTable).where(eq(patientsTable.id, body.patientId));
+    const [patient] = await db.select().from(patientsTable).where(sql`${patientsTable.id} = ${body.patientId} AND ${patientsTable.physicianId} = ${physicianId}`);
     if (!patient) {
       res.status(404).json({ error: "Patient not found" });
       return;
@@ -122,6 +145,11 @@ router.post("/scans", async (req, res) => {
 
 router.get("/scans/:id", async (req, res) => {
   try {
+    const physicianId = req.headers["x-physician-id"] as string | undefined;
+    if (!physicianId) {
+      res.status(401).json({ error: "Missing x-physician-id header" });
+      return;
+    }
     const { id } = GetScanParams.parse({ id: Number(req.params.id) });
     const [scan] = await db.select().from(scansTable).where(eq(scansTable.id, id));
     if (!scan) {
@@ -129,7 +157,11 @@ router.get("/scans/:id", async (req, res) => {
       return;
     }
 
-    const [patient] = await db.select().from(patientsTable).where(eq(patientsTable.id, scan.patientId));
+    const [patient] = await db.select().from(patientsTable).where(sql`${patientsTable.id} = ${scan.patientId} AND ${patientsTable.physicianId} = ${physicianId}`);
+    if (!patient) {
+      res.status(404).json({ error: "Scan not found" });
+      return;
+    }
     const response = await buildScanResponse(scan, patient?.name ?? "Unknown");
     res.json(response);
   } catch (err) {

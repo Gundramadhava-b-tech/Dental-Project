@@ -227,8 +227,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* Right cluster */}
           <div className="flex items-center gap-3">
             {/* System status pill */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="relative flex w-2 h-2">
+            <div className="hidden lg:flex shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="relative flex w-2 h-2 shrink-0">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
               </span>
@@ -236,8 +236,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Date */}
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/40 border border-border/40">
-              <CircleDot className="w-3 h-3 text-primary" />
+            <div className="hidden xl:flex shrink-0 whitespace-nowrap items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/40 border border-border/40">
+              <CircleDot className="w-3 h-3 text-primary shrink-0" />
               <span className="text-[11px] font-semibold text-muted-foreground tracking-wide uppercase">
                 {format(new Date(), "EEE, MMM d • yyyy")}
               </span>

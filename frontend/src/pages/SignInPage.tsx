@@ -86,9 +86,9 @@ export default function SignInPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="relative z-10 w-full max-w-sm"
+        className="relative z-10 w-full max-w-lg"
       >
-        <div className="bg-white/85 backdrop-blur border border-white/80 rounded-2xl shadow-xl px-8 py-10">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl px-10 py-12">
           {/* Logo */}
           <div className="flex flex-col items-center mb-7">
             <AeroDiagLogo size={40} />
@@ -132,21 +132,21 @@ export default function SignInPage() {
             <div className="flex-1 h-px bg-border/50" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="signin-email" className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
+              <label htmlFor="signin-email" className="block text-sm font-medium text-foreground mb-2">Email address</label>
               <input
                 id="signin-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
-                className="w-full h-10 px-3.5 rounded-xl text-sm bg-secondary/40 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/70 focus:bg-white transition-all"
+                className="w-full h-12 px-4 rounded-xl text-base bg-secondary/40 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/70 focus:bg-white transition-all shadow-sm"
                 required
               />
             </div>
             <div>
-              <label htmlFor="signin-password" className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+              <label htmlFor="signin-password" className="block text-sm font-medium text-foreground mb-2">Password</label>
               <div className="relative">
                 <input
                   id="signin-password"
@@ -154,16 +154,16 @@ export default function SignInPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full h-10 px-3.5 pr-10 rounded-xl text-sm bg-secondary/40 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/70 focus:bg-white transition-all"
+                  className="w-full h-12 px-4 pr-11 rounded-xl text-base bg-secondary/40 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/70 focus:bg-white transition-all shadow-sm"
                   required
                 />
                 <button
                   type="button"
                   id="toggle-password-btn"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function SignInPage() {
               id="signin-continue-btn"
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white text-sm transition-all disabled:opacity-60 hover:shadow-lg hover:-translate-y-0.5"
+              className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-semibold text-white text-base transition-all disabled:opacity-60 hover:shadow-lg hover:-translate-y-0.5 mt-2"
               style={{ background: "hsl(175, 100%, 32%)" }}
             >
               {loading ? (
