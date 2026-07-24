@@ -1,9 +1,13 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.osa.diagnostic',
-  appName: 'osa-diagnostic',
-  webDir: 'dist/public'
+  appId: 'com.osadiagnostic.app',
+  appName: 'OSA Diagnostic',
+  webDir: 'dist/public',
+  server: {
+    androidScheme: 'https',
+    cleartext: true
+  }
 };
 
 export default config;
