@@ -9,9 +9,22 @@ export type BodyType<T> = T;
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
-function isRequest(input: RequestInfo | URL): input is Request {
-  return typeof Request !== "undefined" && input instanceof Request;
+// In production builds (APK / Firebase Hosting), VITE_API_URL must point to
+// the deployed backend, e.g. https://your-backend.railway.app
+// In dev mode the Vite proxy forwards /api → localhost:5000, so we keep it relative.
+const API_BASE_URL: string =
+  (typeof import.meta !== "undefined" &&
+    (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) ||
+  "";
+
+function resolveApiUrl(url: string): string {
+  if (API_BASE_URL && url.startsWith("/api")) {
+    return `${API_BASE_URL}${url}`;
+  }
+  return url;
 }
+
+
 
 function resolveMethod(input: RequestInfo | URL, explicitMethod?: string): string {
   if (explicitMethod) return explicitMethod.toUpperCase();
@@ -304,9 +317,12 @@ export async function customFetch<T = unknown>(
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
-  const requestInfo = { method, url: resolveUrl(input) };
+  const rawUrl = resolveUrl(input);
+  const resolvedUrl = resolveApiUrl(rawUrl);
+  const requestInfo = { method, url: resolvedUrl };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const response = await fetch(resolvedUrl, { ...init, method, headers });
+
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
